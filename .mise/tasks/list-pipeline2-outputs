@@ -1,0 +1,11 @@
+#!/bin/bash
+# mise description="List sessions in the cks3:dhcp-afq/rel3PipelineSteffi/output folder"
+set -o errexit -o errtrace -o pipefail
+export RCLONE_CONFIG_DHCPS3_TYPE=s3
+export RCLONE_CONFIG_DHCPS3_PROVIDER=AWS
+export RCLONE_CONFIG_DHCPS3_ENV_AUTH=true
+export RCLONE_CONFIG_DHCPS3_REGION=us-west-2
+output_loc="dhcps3:${1:-${DHCP_PIPELINE_S3_OUTPUT_ROOT}}"
+[ "${LIST_PIPELINE_OUTPUT_NOHEADER:-0}" = "1" ] || printf "subject\tsession\n"
+rclone lsf -R "${output_loc}" --include '/sub-*/ses*/*' | grep 'ses-' | cut -f1-2 -d'/' | grep '/' | sort -u
+

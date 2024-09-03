@@ -1,0 +1,8 @@
+#!/bin/bash
+# mise description="Submit jobs for all subjects and sessions"
+set -o errexit -o errtrace -o pipefail -o xtrace
+inFile="${inFile:-${root}/data/args.txt}"
+while read -r sub ses rest; do
+    echo "Submitting job for subject $sub and session $ses"
+    sbatch "$@" "${root}/tract-profiles.sbatch" "$sub" "$ses"
+done < "$inFile"

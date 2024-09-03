@@ -1,0 +1,5 @@
+#!/bin/bash
+# mise description="Count output files in the cks3:dhcp-afq/rel3PipelineSteffi/output folder"
+set -o errexit -o errtrace -o pipefail
+export LIST_PIPELINE_OUTPUT_NOHEADER=1
+mise task run list-pipeline2-outputs "$@" | wc -l
