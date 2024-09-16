@@ -1110,22 +1110,23 @@ def dhcp_pyafq_pipeline(subject, session, **kwargs):
     completed_file = Path(f"output/sub-{subject}/ses-{session}") / (
         ".pipeline_completed" if len(set(found_bundles)) == len(set(required_bundles)) else ""
     )
-    sh.date("-Is", _out=str(completed_file))
+    sh.date("-Is", _out=str(completed_file))  # type: ignore
 
     ###############################################################################
     # Step 20. Upload to s3
     ###############################################################################
     # Remove intermediate files
     if os.environ.get("DHCP_PIPELINE_KEEP_PROJ_FILES", "0") == "0":
-        logger.debug("Removing intermediate projection files (set DHCP_PIPELINE_KEEP_PROJ_FILES=1 to keep)")
-        for p in proj_values:
-            Path(
-                f"output/sub-{subject}/ses-{session}/surf/sub-{subject}_ses-{session}_mrivol2surf_bundle-{bundle}_lh_surface_{p}.mgh"
-            ).unlink(missing_ok=True)
-            Path(
-                f"output/sub-{subject}/ses-{session}/surf/sub-{subject}_ses-{session}_mrivol2surf_bundle-{bundle}_rh_surface_{p}.mgh"
-            ).unlink(missing_ok=True)
-
+        if proj_files_to_remove := tuple(
+            Path(f"output/sub-{subject}/ses-{session}/surf").glob(
+                f"sub-{subject}_ses-{session}_mrivol2surf_bundle-*_?h_surface_*.mgh"
+            )
+        ):
+            logger.debug(
+                f"Removing {len(proj_files_to_remove)} intermediate projection files (set DHCP_PIPELINE_KEEP_PROJ_FILES=1 to keep)"
+            )
+            for p in proj_files_to_remove:
+                p.unlink(missing_ok=True)
     logger.info("--- Step 20. Upload to s3")
     if os.environ.get("DHCP_PIPELINE_NO_UPLOAD", "0") != "0":
         logger.warning("Skipping upload to s3 as DHCP_PIPELINE_NO_UPLOAD is set")
